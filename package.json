@@ -1,0 +1,43 @@
+{
+  "name": "snycorediscord",
+  "version": "1.0.0",
+  "description": "Bot discord pour gérer mon homelab",
+  "keywords": [
+    "Discord",
+    "Typescript",
+    "Homelab",
+    "Games"
+  ],
+  "homepage": "https://github.com/homelab-sny1411/SnyCoreDiscord#readme",
+  "bugs": {
+    "url": "https://github.com/homelab-sny1411/SnyCoreDiscord/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/homelab-sny1411/SnyCoreDiscord.git"
+  },
+  "license": "ISC",
+  "author": "Mattéo humez",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@types/node": "^25.0.1",
+    "semantic-release": "^24.2.9",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.2.3",
+    "pino": "^10.1.0"
+  }
+}
