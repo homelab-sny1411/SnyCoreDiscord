@@ -1,12 +1,16 @@
 import 'dotenv/config';
 
-export const env = {
-    token: process.env.DISCORD_TOKEN!,
-    clientId: process.env.CLIENT_ID!,
-    guildId: process.env.GUILD_ID
-};
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
 
-if (!env.token || !env.clientId) {
-    throw new Error('Variables d’environnement manquantes');
+if (!token || !clientId) {
+    throw new Error(`Variables d'environnement manquantes`);
 }
+
+export const env = {
+    token,
+    clientId,
+    guildId,
+};
 

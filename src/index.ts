@@ -3,10 +3,10 @@ import { env } from './config/env';
 import { logger } from './config/logger';
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [GatewayIntentBits.Guilds],
 });
 
-client.once('ready', () => {
+client.once(`ready`, () => {
     logger.info(`Connecté en tant que ${client.user?.tag}`);
 });
 
