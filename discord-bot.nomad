@@ -81,11 +81,14 @@ job "discord-bot" {
       mode     = "fail"
     }
 
-    task "discord-bot" {
+    task "snyCoreDiscord" {
       driver = "docker"
 
       config {
         image = var.image
+
+        network_mode = "host"
+
         auth {
           username = var.registry_user
           password = var.registry_password
