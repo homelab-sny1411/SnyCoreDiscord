@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build artifacts
+dist/
+
+# Version control
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+README.md
+CHANGELOG.md
+
+# CI/CD
+.github
+
+# Config files
+.releaserc.json
+eslint.config.mjs
+
+# Lock files not needed (we use package-lock.json)
+pnpm-lock.yaml
+yarn.lock
+
+# Tests
+*.test.ts
+*.test.js
+__tests__
+coverage
+
+# OS files
+.DS_Store
+Thumbs.db
