@@ -26,18 +26,24 @@ export const statusCommand: Command = {
 
             const statusResult = await getMinecraftStatus(env.minecraftServerHost, env.minecraftApiPort);
 
-            if (statusResult.success) {
+            if (statusResult.success && statusResult.data) {
                 const statusEmoji = {
-                    online: `🟢`,
-                    offline: `🔴`,
+                    running: `🟢`,
+                    stopped: `🔴`,
                     starting: `🟡`,
                     stopping: `🟠`,
-                }[statusResult.status || `offline`] || `⚪`;
+                }[statusResult.data.serviceStatus] || `⚪`;
 
-                let response = `${statusEmoji} **Statut du serveur:** ${statusResult.status || `inconnu`}`;
+                let response = `${statusEmoji} **Statut du serveur:** ${statusResult.data.serviceStatus}`;
 
-                if (statusResult.players) {
-                    response += `\n👥 **Joueurs:** ${statusResult.players.online}/${statusResult.players.max}`;
+                response += `\n👥 **Joueurs:** ${statusResult.data.playersOnline}${statusResult.data.maxPlayers ? `/${statusResult.data.maxPlayers}` : ``}`;
+
+                if (statusResult.data.version) {
+                    response += `\n📦 **Version:** ${statusResult.data.version}`;
+                }
+
+                if (statusResult.data.motd) {
+                    response += `\n💬 **MOTD:** ${statusResult.data.motd}`;
                 }
 
                 if (statusResult.message) {

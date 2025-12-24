@@ -26,16 +26,17 @@ export const autoShutdownStatusCommand: Command = {
 
             const statusResult = await getAutoShutdownStatus(env.minecraftServerHost, env.minecraftApiPort);
 
-            if (statusResult.success) {
-                const enabledEmoji = statusResult.enabled ? `✅` : `❌`;
-                const enabledText = statusResult.enabled ? `Activé` : `Désactivé`;
+            if (statusResult.success && statusResult.data) {
+                const enabledEmoji = statusResult.data.enabled ? `✅` : `❌`;
+                const enabledText = statusResult.data.enabled ? `Activé` : `Désactivé`;
 
                 let response = `${enabledEmoji} **Auto-shutdown:** ${enabledText}`;
 
-                if (statusResult.enabled && statusResult.timeout) {
-                    const timeoutMinutes = Math.floor(statusResult.timeout / 60);
-                    const timeoutSeconds = statusResult.timeout % 60;
-                    response += `\n⏱️ **Délai:** ${timeoutMinutes > 0 ? `${timeoutMinutes}m ` : ``}${timeoutSeconds}s`;
+                if (statusResult.data.enabled) {
+                    response += `\n⏱️ **Délai d'inactivité:** ${statusResult.data.idleMinutes} minutes`;
+                    const idleEmoji = statusResult.data.isIdle ? `💤` : `⚡`;
+                    const idleText = statusResult.data.isIdle ? `Inactif` : `Actif`;
+                    response += `\n${idleEmoji} **État:** ${idleText}`;
                 }
 
                 if (statusResult.message) {
