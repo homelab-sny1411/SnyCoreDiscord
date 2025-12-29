@@ -5,6 +5,7 @@ import { stopCommand } from './stop';
 import { restartCommand } from './restart';
 import { statusCommand } from './status';
 import { autoShutdownStatusCommand } from './auto-shutdown-status';
+import { rconCommand } from './rcon';
 
 export const commands = new Collection<string, Command>();
 
@@ -13,3 +14,4 @@ commands.set(stopCommand.data.name, stopCommand);
 commands.set(restartCommand.data.name, restartCommand);
 commands.set(statusCommand.data.name, statusCommand);
 commands.set(autoShutdownStatusCommand.data.name, autoShutdownStatusCommand);
+commands.set(rconCommand.data.name, rconCommand);

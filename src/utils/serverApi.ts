@@ -32,6 +32,17 @@ export interface AutoShutdownStatus {
     data?: AutoShutdownStatusData;
 }
 
+export interface RconResponseData {
+    command: string;
+    response: string;
+}
+
+export interface RconResponse {
+    success: boolean;
+    message?: string;
+    data?: RconResponseData;
+}
+
 export const startMinecraftServer = async (host: string, port = 1411): Promise<ServerApiResponse> => {
     try {
         const response = await axios.post(`http://${host}:${port}/minecraft/start`, {}, {
@@ -101,6 +112,32 @@ export const getAutoShutdownStatus = async (host: string, port = 1411): Promise<
         };
     } catch (error) {
         logger.error(error, `Erreur lors de la récupération du statut d'auto-shutdown sur ${host}:${port}`);
+        return { success: false, message: `Erreur lors de la communication avec l'API` };
+    }
+};
+
+/**
+ * Envoie une commande RCON au serveur Minecraft via l'API
+ * @param host - L'adresse du serveur hébergeant l'API
+ * @param command - La commande RCON à exécuter
+ * @param port - Le port de l'API (par défaut 1411)
+ * @returns La réponse de la commande RCON
+ */
+export const sendRconCommand = async (host: string, command: string, port = 1411): Promise<RconResponse> => {
+    try {
+        const response = await axios.post(`http://${host}:${port}/minecraft/rcon`, {
+            command,
+        }, {
+            timeout: 10000,
+        });
+        logger.info(`Commande RCON "${command}" envoyée à ${host}:${port}`);
+        return {
+            success: response.data?.success ?? true,
+            message: response.data?.message,
+            data: response.data?.data,
+        };
+    } catch (error) {
+        logger.error(error, `Erreur lors de l'envoi de la commande RCON sur ${host}:${port}`);
         return { success: false, message: `Erreur lors de la communication avec l'API` };
     }
 };
