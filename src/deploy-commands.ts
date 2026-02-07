@@ -5,7 +5,7 @@ import { commands } from './commands';
 
 const commandsData = Array.from(commands.values()).map((command) => command.data.toJSON());
 
-const rest = new REST({ version: '10' }).setToken(env.token);
+const rest = new REST({ version: `10` }).setToken(env.token);
 
 const deployCommands = async () => {
     try {
@@ -23,9 +23,9 @@ const deployCommands = async () => {
             logger.info(`Commandes slash déployées globalement avec succès`);
         }
     } catch (error) {
-        logger.error(error, 'Erreur lors du déploiement des commandes slash');
+        logger.error(error, `Erreur lors du déploiement des commandes slash`);
         process.exit(1);
     }
 };
 
-deployCommands();
+void deployCommands();

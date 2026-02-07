@@ -116,6 +116,21 @@ export const getAutoShutdownStatus = async (host: string, port = 1411): Promise<
     }
 };
 
+export const setAutoShutdown = async (host: string, enabled: boolean, port = 1411): Promise<ServerApiResponse> => {
+    try {
+        const response = await axios.post(`http://${host}:${port}/minecraft/auto-shutdown`, {
+            enabled,
+        }, {
+            timeout: 10000,
+        });
+        logger.info(`Auto-shutdown ${enabled ? `activé` : `désactivé`} sur ${host}:${port}`);
+        return { success: true, message: response.data?.message };
+    } catch (error) {
+        logger.error(error, `Erreur lors de la modification de l'auto-shutdown sur ${host}:${port}`);
+        return { success: false, message: `Erreur lors de la communication avec l'API` };
+    }
+};
+
 /**
  * Envoie une commande RCON au serveur Minecraft via l'API
  * @param host - L'adresse du serveur hébergeant l'API

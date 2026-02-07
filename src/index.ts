@@ -11,7 +11,7 @@ client.once(Events.ClientReady, () => {
     logger.info(`Connecté en tant que ${client.user?.tag}`);
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
+client.on(Events.InteractionCreate, (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = commands.get(interaction.commandName);
@@ -21,19 +21,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
     }
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
+    command.execute(interaction).catch((error) => {
         logger.error(error, `Erreur lors de l'exécution de la commande ${interaction.commandName}`);
 
         const errorMessage = { content: `Une erreur s'est produite lors de l'exécution de la commande.`, ephemeral: true };
 
         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(errorMessage);
+            void interaction.followUp(errorMessage);
         } else {
-            await interaction.reply(errorMessage);
+            void interaction.reply(errorMessage);
         }
-    }
+    });
 });
 
 client.login(env.token).catch((err) => {
