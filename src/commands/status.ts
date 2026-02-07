@@ -3,6 +3,7 @@ import { Command } from '../types/command';
 import { getMinecraftStatus } from '../utils/serverApi';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { createServerStatusEmbed, createErrorEmbed, createLoadingEmbed, createConfigErrorEmbed } from '../utils/embeds';
 
 export const statusCommand: Command = {
     data: new SlashCommandBuilder()
@@ -13,54 +14,34 @@ export const statusCommand: Command = {
         await interaction.deferReply();
 
         if (!env.minecraftServerHost) {
-            await interaction.editReply({
-                content: `❌ Configuration manquante (MINECRAFT_SERVER_HOST)`,
-            });
+            const embed = createConfigErrorEmbed(`MINECRAFT_SERVER_HOST`);
+            await interaction.editReply({ embeds: [embed] });
             return;
         }
 
         try {
-            await interaction.editReply({
-                content: `🔍 Récupération du statut du serveur...`,
-            });
+            const loadingEmbed = createLoadingEmbed(`🔍 Récupération du statut du serveur...`);
+            await interaction.editReply({ embeds: [loadingEmbed] });
 
             const statusResult = await getMinecraftStatus(env.minecraftServerHost, env.minecraftApiPort);
 
             if (statusResult.success && statusResult.data) {
-                const statusEmoji = {
-                    running: `🟢`,
-                    stopped: `🔴`,
-                    starting: `🟡`,
-                    stopping: `🟠`,
-                }[statusResult.data.serviceStatus] || `⚪`;
-
-                let response = `${statusEmoji} **Statut du serveur:** ${statusResult.data.serviceStatus}`;
-
-                response += `\n👥 **Joueurs:** ${statusResult.data.playersOnline}${statusResult.data.maxPlayers ? `/${statusResult.data.maxPlayers}` : ``}`;
-
-                if (statusResult.data.version) {
-                    response += `\n📦 **Version:** ${statusResult.data.version}`;
-                }
-
-                if (statusResult.data.motd) {
-                    response += `\n💬 **MOTD:** ${statusResult.data.motd}`;
-                }
-
-                if (statusResult.message) {
-                    response += `\n📝 ${statusResult.message}`;
-                }
-
-                await interaction.editReply({ content: response });
+                const embed = createServerStatusEmbed(statusResult.data, statusResult.message);
+                await interaction.editReply({ embeds: [embed] });
             } else {
-                await interaction.editReply({
-                    content: `❌ Impossible de récupérer le statut du serveur\n${statusResult.message ? `📝 ${statusResult.message}` : ``}`,
-                });
+                const embed = createErrorEmbed(
+                    `❌ Impossible de récupérer le statut`,
+                    statusResult.message,
+                );
+                await interaction.editReply({ embeds: [embed] });
             }
         } catch (error) {
             logger.error(error, `Erreur lors de l'exécution de la commande /status`);
-            await interaction.editReply({
-                content: `❌ Une erreur inattendue s'est produite`,
-            });
+            const embed = createErrorEmbed(
+                `❌ Erreur inattendue`,
+                `Une erreur s'est produite lors de la récupération du statut.`,
+            );
+            await interaction.editReply({ embeds: [embed] });
         }
     },
 };

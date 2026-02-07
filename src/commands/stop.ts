@@ -3,6 +3,7 @@ import { Command } from '../types/command';
 import { stopMinecraftServer } from '../utils/serverApi';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { createLoadingEmbed, createSuccessEmbed, createErrorEmbed, createConfigErrorEmbed } from '../utils/embeds';
 
 export const stopCommand: Command = {
     data: new SlashCommandBuilder()
@@ -13,33 +14,37 @@ export const stopCommand: Command = {
         await interaction.deferReply();
 
         if (!env.minecraftServerHost) {
-            await interaction.editReply({
-                content: `❌ Configuration manquante (MINECRAFT_SERVER_HOST)`,
-            });
+            const embed = createConfigErrorEmbed(`MINECRAFT_SERVER_HOST`);
+            await interaction.editReply({ embeds: [embed] });
             return;
         }
 
         try {
-            await interaction.editReply({
-                content: `🛑 Arrêt du serveur Minecraft en cours...`,
-            });
+            let embed = createLoadingEmbed(`🛑 Arrêt du serveur Minecraft...`);
+            await interaction.editReply({ embeds: [embed] });
 
             const apiResult = await stopMinecraftServer(env.minecraftServerHost, env.minecraftApiPort);
 
             if (apiResult.success) {
-                await interaction.editReply({
-                    content: `✅ Serveur Minecraft arrêté avec succès !\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createSuccessEmbed(
+                    `✅ Serveur arrêté`,
+                    apiResult.message || `Le serveur a été arrêté avec succès.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             } else {
-                await interaction.editReply({
-                    content: `❌ Erreur lors de l'arrêt du serveur Minecraft\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createErrorEmbed(
+                    `❌ Erreur lors de l'arrêt`,
+                    apiResult.message || `Impossible d'arrêter le serveur.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             }
         } catch (error) {
             logger.error(error, `Erreur lors de l'exécution de la commande /stop`);
-            await interaction.editReply({
-                content: `❌ Une erreur inattendue s'est produite`,
-            });
+            const embed = createErrorEmbed(
+                `❌ Erreur inattendue`,
+                `Une erreur s'est produite lors de l'arrêt.`,
+            );
+            await interaction.editReply({ embeds: [embed] });
         }
     },
 };

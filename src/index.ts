@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Events } from 'discord.js';
 import { env } from './config/env';
 import { logger } from './config/logger';
 import { commands } from './commands';
+import { createErrorEmbed } from './utils/embeds';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds],
@@ -24,12 +25,15 @@ client.on(Events.InteractionCreate, (interaction) => {
     command.execute(interaction).catch((error) => {
         logger.error(error, `Erreur lors de l'exécution de la commande ${interaction.commandName}`);
 
-        const errorMessage = { content: `Une erreur s'est produite lors de l'exécution de la commande.`, ephemeral: true };
+        const errorEmbed = createErrorEmbed(
+            `❌ Erreur`,
+            `Une erreur s'est produite lors de l'exécution de la commande.`,
+        );
 
         if (interaction.replied || interaction.deferred) {
-            void interaction.followUp(errorMessage);
+            void interaction.followUp({ embeds: [errorEmbed], ephemeral: true });
         } else {
-            void interaction.reply(errorMessage);
+            void interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }
     });
 });

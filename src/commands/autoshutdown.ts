@@ -3,6 +3,7 @@ import { Command } from '../types/command';
 import { getAutoShutdownStatus, setAutoShutdown } from '../utils/serverApi';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { createSuccessEmbed, createErrorEmbed, createAutoShutdownEmbed, createConfigErrorEmbed } from '../utils/embeds';
 
 export const autoshutdownCommand: Command = {
     data: new SlashCommandBuilder()
@@ -24,9 +25,8 @@ export const autoshutdownCommand: Command = {
         await interaction.deferReply();
 
         if (!env.minecraftServerHost) {
-            await interaction.editReply({
-                content: `❌ Configuration manquante (MINECRAFT_SERVER_HOST)`,
-            });
+            const embed = createConfigErrorEmbed(`MINECRAFT_SERVER_HOST`);
+            await interaction.editReply({ embeds: [embed] });
             return;
         }
 
@@ -37,24 +37,36 @@ export const autoshutdownCommand: Command = {
                 case `enable`: {
                     const result = await setAutoShutdown(env.minecraftServerHost, true, env.minecraftApiPort);
                     if (result.success) {
-                        await interaction.editReply({ content: `✅ Autoshutdown **activé**` });
+                        const embed = createSuccessEmbed(
+                            `✅ Auto-shutdown activé`,
+                            result.message || `L'auto-shutdown a été activé.`,
+                        );
+                        await interaction.editReply({ embeds: [embed] });
                         logger.info({ user: interaction.user.tag }, `Autoshutdown activé`);
                     } else {
-                        await interaction.editReply({
-                            content: `❌ Impossible d'activer l'autoshutdown\n${result.message ? `📝 ${result.message}` : ``}`,
-                        });
+                        const embed = createErrorEmbed(
+                            `❌ Impossible d'activer`,
+                            result.message || `Impossible d'activer l'auto-shutdown.`,
+                        );
+                        await interaction.editReply({ embeds: [embed] });
                     }
                     break;
                 }
                 case `disable`: {
                     const result = await setAutoShutdown(env.minecraftServerHost, false, env.minecraftApiPort);
                     if (result.success) {
-                        await interaction.editReply({ content: `✅ Autoshutdown **désactivé**` });
+                        const embed = createSuccessEmbed(
+                            `✅ Auto-shutdown désactivé`,
+                            result.message || `L'auto-shutdown a été désactivé.`,
+                        );
+                        await interaction.editReply({ embeds: [embed] });
                         logger.info({ user: interaction.user.tag }, `Autoshutdown désactivé`);
                     } else {
-                        await interaction.editReply({
-                            content: `❌ Impossible de désactiver l'autoshutdown\n${result.message ? `📝 ${result.message}` : ``}`,
-                        });
+                        const embed = createErrorEmbed(
+                            `❌ Impossible de désactiver`,
+                            result.message || `Impossible de désactiver l'auto-shutdown.`,
+                        );
+                        await interaction.editReply({ embeds: [embed] });
                     }
                     break;
                 }
@@ -62,36 +74,25 @@ export const autoshutdownCommand: Command = {
                     const statusResult = await getAutoShutdownStatus(env.minecraftServerHost, env.minecraftApiPort);
 
                     if (statusResult.success && statusResult.data) {
-                        const enabledEmoji = statusResult.data.enabled ? `✅` : `❌`;
-                        const enabledText = statusResult.data.enabled ? `Activé` : `Désactivé`;
-
-                        let response = `${enabledEmoji} **Auto-shutdown:** ${enabledText}`;
-
-                        if (statusResult.data.enabled) {
-                            response += `\n⏱️ **Délai d'inactivité:** ${statusResult.data.idleMinutes} minutes`;
-                            const idleEmoji = statusResult.data.isIdle ? `💤` : `⚡`;
-                            const idleText = statusResult.data.isIdle ? `Inactif` : `Actif`;
-                            response += `\n${idleEmoji} **État:** ${idleText}`;
-                        }
-
-                        if (statusResult.message) {
-                            response += `\n📝 ${statusResult.message}`;
-                        }
-
-                        await interaction.editReply({ content: response });
+                        const embed = createAutoShutdownEmbed(statusResult.data, statusResult.message);
+                        await interaction.editReply({ embeds: [embed] });
                     } else {
-                        await interaction.editReply({
-                            content: `❌ Impossible de récupérer le statut\n${statusResult.message ? `📝 ${statusResult.message}` : ``}`,
-                        });
+                        const embed = createErrorEmbed(
+                            `❌ Impossible de récupérer le statut`,
+                            statusResult.message || `Erreur lors de la récupération du statut.`,
+                        );
+                        await interaction.editReply({ embeds: [embed] });
                     }
                     break;
                 }
             }
         } catch (error) {
             logger.error(error, `Erreur lors de l'exécution de la commande /autoshutdown`);
-            await interaction.editReply({
-                content: `❌ Une erreur inattendue s'est produite`,
-            });
+            const embed = createErrorEmbed(
+                `❌ Erreur inattendue`,
+                `Une erreur s'est produite lors de l'exécution de la commande.`,
+            );
+            await interaction.editReply({ embeds: [embed] });
         }
     },
 };

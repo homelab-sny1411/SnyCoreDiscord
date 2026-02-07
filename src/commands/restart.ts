@@ -3,6 +3,7 @@ import { Command } from '../types/command';
 import { restartMinecraftServer } from '../utils/serverApi';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { createLoadingEmbed, createSuccessEmbed, createErrorEmbed, createConfigErrorEmbed } from '../utils/embeds';
 
 export const restartCommand: Command = {
     data: new SlashCommandBuilder()
@@ -13,33 +14,37 @@ export const restartCommand: Command = {
         await interaction.deferReply();
 
         if (!env.minecraftServerHost) {
-            await interaction.editReply({
-                content: `❌ Configuration manquante (MINECRAFT_SERVER_HOST)`,
-            });
+            const embed = createConfigErrorEmbed(`MINECRAFT_SERVER_HOST`);
+            await interaction.editReply({ embeds: [embed] });
             return;
         }
 
         try {
-            await interaction.editReply({
-                content: `🔄 Redémarrage du serveur Minecraft en cours...`,
-            });
+            let embed = createLoadingEmbed(`🔄 Redémarrage du serveur Minecraft...`);
+            await interaction.editReply({ embeds: [embed] });
 
             const apiResult = await restartMinecraftServer(env.minecraftServerHost, env.minecraftApiPort);
 
             if (apiResult.success) {
-                await interaction.editReply({
-                    content: `✅ Serveur Minecraft redémarré avec succès !\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createSuccessEmbed(
+                    `✅ Serveur redémarré`,
+                    apiResult.message || `Le serveur a été redémarré avec succès.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             } else {
-                await interaction.editReply({
-                    content: `❌ Erreur lors du redémarrage du serveur Minecraft\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createErrorEmbed(
+                    `❌ Erreur lors du redémarrage`,
+                    apiResult.message || `Impossible de redémarrer le serveur.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             }
         } catch (error) {
             logger.error(error, `Erreur lors de l'exécution de la commande /restart`);
-            await interaction.editReply({
-                content: `❌ Une erreur inattendue s'est produite`,
-            });
+            const embed = createErrorEmbed(
+                `❌ Erreur inattendue`,
+                `Une erreur s'est produite lors du redémarrage.`,
+            );
+            await interaction.editReply({ embeds: [embed] });
         }
     },
 };

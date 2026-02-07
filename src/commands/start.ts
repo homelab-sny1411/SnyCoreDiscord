@@ -5,6 +5,7 @@ import { sendWakeOnLan } from '../utils/wol';
 import { startMinecraftServer } from '../utils/serverApi';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { createLoadingEmbed, createSuccessEmbed, createErrorEmbed, createConfigErrorEmbed } from '../utils/embeds';
 
 export const startCommand: Command = {
     data: new SlashCommandBuilder()
@@ -15,67 +16,72 @@ export const startCommand: Command = {
         await interaction.deferReply();
 
         if (!env.minecraftServerHost || !env.minecraftServerMac) {
-            await interaction.editReply({
-                content: `❌ Configuration manquante (MINECRAFT_SERVER_HOST ou MINECRAFT_SERVER_MAC)`,
-            });
+            const embed = createConfigErrorEmbed(`MINECRAFT_SERVER_HOST ou MINECRAFT_SERVER_MAC`);
+            await interaction.editReply({ embeds: [embed] });
             return;
         }
 
         try {
-            await interaction.editReply({
-                content: `🔍 Vérification de l'état du serveur...`,
-            });
+            let embed = createLoadingEmbed(`🔍 Vérification de l'état du serveur...`);
+            await interaction.editReply({ embeds: [embed] });
 
             const pingResult = await pingServer(env.minecraftServerHost, env.minecraftServerPort);
 
             if (!pingResult.online) {
                 logger.info(`Serveur ${env.minecraftServerHost} hors ligne, envoi du Wake-on-LAN...`);
 
-                await interaction.editReply({
-                    content: `📡 Serveur hors ligne. Envoi du Wake-on-LAN...`,
-                });
+                embed = createLoadingEmbed(`📡 Serveur hors ligne. Envoi du Wake-on-LAN...`);
+                await interaction.editReply({ embeds: [embed] });
 
                 const wolSuccess = await sendWakeOnLan(env.minecraftServerMac);
 
                 if (!wolSuccess) {
-                    await interaction.editReply({
-                        content: `❌ Échec de l'envoi du Wake-on-LAN`,
-                    });
+                    embed = createErrorEmbed(`❌ Échec du Wake-on-LAN`, `L'envoi du Wake-on-LAN a échoué.`);
+                    await interaction.editReply({ embeds: [embed] });
                     return;
                 }
 
-                await interaction.editReply({
-                    content: `⏳ Wake-on-LAN envoyé ! Attente du démarrage de la machine (${env.minecraftWolWaitTime / 1000}s)...`,
-                });
+                embed = createLoadingEmbed(
+                    `⏳ Wake-on-LAN envoyé`,
+                    `Attente du démarrage de la machine (${env.minecraftWolWaitTime / 1000}s)...`,
+                );
+                await interaction.editReply({ embeds: [embed] });
 
                 await new Promise((resolve) => setTimeout(resolve, env.minecraftWolWaitTime));
             } else {
                 logger.info(`Serveur ${env.minecraftServerHost} déjà en ligne (latence: ${pingResult.latency}ms)`);
-                await interaction.editReply({
-                    content: `✅ Serveur en ligne (latence: ${pingResult.latency}ms)`,
-                });
+                embed = createSuccessEmbed(
+                    `✅ Serveur en ligne`,
+                    `Latence: ${pingResult.latency}ms`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             }
 
-            await interaction.editReply({
-                content: `🚀 Démarrage du serveur Minecraft via l'API...`,
-            });
+            embed = createLoadingEmbed(`🚀 Démarrage du serveur Minecraft...`, `Envoi de la commande via l'API...`);
+            await interaction.editReply({ embeds: [embed] });
 
             const apiResult = await startMinecraftServer(env.minecraftServerHost, env.minecraftApiPort);
 
             if (apiResult.success) {
-                await interaction.editReply({
-                    content: `✅ Serveur Minecraft démarré avec succès !\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createSuccessEmbed(
+                    `✅ Serveur Minecraft démarré`,
+                    apiResult.message || `Le serveur a démarré avec succès.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             } else {
-                await interaction.editReply({
-                    content: `❌ Erreur lors du démarrage du serveur Minecraft\n${apiResult.message ? `📝 ${apiResult.message}` : ``}`,
-                });
+                embed = createErrorEmbed(
+                    `❌ Erreur lors du démarrage`,
+                    apiResult.message || `Impossible de démarrer le serveur.`,
+                );
+                await interaction.editReply({ embeds: [embed] });
             }
         } catch (error) {
             logger.error(error, `Erreur lors de l'exécution de la commande /start`);
-            await interaction.editReply({
-                content: `❌ Une erreur inattendue s'est produite`,
-            });
+            const embed = createErrorEmbed(
+                `❌ Erreur inattendue`,
+                `Une erreur s'est produite lors du démarrage.`,
+            );
+            await interaction.editReply({ embeds: [embed] });
         }
     },
 };
